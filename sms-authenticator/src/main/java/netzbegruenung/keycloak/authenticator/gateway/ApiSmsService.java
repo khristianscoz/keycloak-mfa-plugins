@@ -86,7 +86,7 @@ public class ApiSmsService implements SmsService{
 		hideResponsePayload = Boolean.parseBoolean(config.get("hideResponsePayload"));
 	}
 
-	public void send(String phoneNumber, String message) {
+	public void send(String phoneNumber, String message, String code) {
 		phoneNumber = cleanPhoneNumber(phoneNumber, countrycode);
 		Builder requestBuilder;
 		HttpRequest request = null;
@@ -96,8 +96,9 @@ public class ApiSmsService implements SmsService{
 			if (urlencode) {
 				requestBuilder = urlencodedRequest(phoneNumber, message);
 			} else {
-				requestPayload = getJsonBody(phoneNumber, message);
+				requestPayload = getJsonBody(phoneNumber, message, code);
 				requestBuilder = jsonRequest(requestPayload);
+				logger.infof("json: %s", requestPayload);
 			}
 
 			if (apiTokenInHeader) {
@@ -146,11 +147,11 @@ public class ApiSmsService implements SmsService{
 		logger.errorf(logMessage, logParams);
 	}
 
-	private String getJsonBody(String phoneNumber, String message) {
+	private String getJsonBody(String phoneNumber, String message, String code) {
 		if (!jsonTemplate.isBlank()) {
 			return useUuid ?
-				String.format(jsonTemplate, UUID.randomUUID(), phoneNumber, message) :
-				String.format(jsonTemplate, phoneNumber, message);
+				String.format(jsonTemplate, UUID.randomUUID(), phoneNumber, message, code) :
+				String.format(jsonTemplate, phoneNumber, message, code);
 		}
 
 		StringBuilder json = new StringBuilder("{");
