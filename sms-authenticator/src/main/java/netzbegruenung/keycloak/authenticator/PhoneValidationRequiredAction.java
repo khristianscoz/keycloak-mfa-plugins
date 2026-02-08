@@ -109,6 +109,7 @@ public class PhoneValidationRequiredAction implements RequiredActionProvider, Cr
 			SmsAuthCredentialProvider smnp = (SmsAuthCredentialProvider) context.getSession().getProvider(CredentialProvider.class, "mobile-number");
 			if (!smnp.isConfiguredFor(context.getRealm(), context.getUser(), SmsAuthCredentialModel.TYPE)) {
 				smnp.createCredential(context.getRealm(), context.getUser(), SmsAuthCredentialModel.createSmsAuthenticator(mobileNumber));
+				context.getUser().setSingleAttribute("mobileNumber", mobileNumber);
 			} else {
 				smnp.updateCredential(
 					context.getRealm(),

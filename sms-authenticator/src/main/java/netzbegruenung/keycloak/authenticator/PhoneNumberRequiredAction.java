@@ -151,6 +151,15 @@ public class PhoneNumberRequiredAction implements RequiredActionProvider, Creden
 			forceRetryOnBadFormat = Boolean.parseBoolean(config.getConfig().getOrDefault("forceRetryOnBadFormat", "false"));
 		}
 
+                if (phoneAlreadyInUse(context, mobileNumber)) {
+                    context.challenge(
+                        context.form()
+                            .setError("phoneNumberAlreadyInUse")
+                            .createErrorPage(Response.Status.BAD_REQUEST)
+                    );
+                    return;
+                }
+
 		// try to format the phone number
 		if (normalizeNumber) {
 			String formattedNumber = formatPhoneNumber(context, mobileNumber);
@@ -261,4 +270,10 @@ public class PhoneNumberRequiredAction implements RequiredActionProvider, Creden
 	public String getCredentialType(KeycloakSession keycloakSession, AuthenticationSessionModel authenticationSessionModel) {
 		return SmsAuthCredentialModel.TYPE;
 	}
+
+        private boolean phoneAlreadyInUse(RequiredActionContext context, String phoneNumber) {
+            return context.getSession().users()
+                    .searchForUserByUserAttributeStream(context.getRealm(), "mobileNumber", phoneNumber)
+                    .anyMatch(user -> true);
+        }
 }
