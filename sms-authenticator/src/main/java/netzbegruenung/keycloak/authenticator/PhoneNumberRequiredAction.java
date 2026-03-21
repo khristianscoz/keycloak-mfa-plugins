@@ -151,28 +151,24 @@ public class PhoneNumberRequiredAction implements RequiredActionProvider, Creden
 			forceRetryOnBadFormat = Boolean.parseBoolean(config.getConfig().getOrDefault("forceRetryOnBadFormat", "false"));
 		}
 
-                if (phoneAlreadyInUse(context, mobileNumber)) {
-                    context.challenge(
-                        context.form()
-                            .setError("phoneNumberAlreadyInUse")
-                            .createErrorPage(Response.Status.BAD_REQUEST)
-                    );
-                    return;
-                }
-
 		// try to format the phone number
-		if (normalizeNumber) {
-			String formattedNumber = formatPhoneNumber(context, mobileNumber);
-			if (formattedNumber != null && !formattedNumber.isBlank()) {
-				mobileNumber = formattedNumber;
-			} else if (forceRetryOnBadFormat) {
-				logger.errorf("Failed phone number formatting checks for: %s", mobileNumber);
-				String formatError = context.getAuthenticationSession().getAuthNote("formatError");
-				if (formatError != null && !formatError.isBlank()) {
-					handleInvalidNumber(context, formatError);
-					return;
-				}
+		logger.infof("raw mobileNumber: %s", mobileNumber);
+		String formattedNumber = formatPhoneNumber(context, mobileNumber);
+		if (formattedNumber != null && !formattedNumber.isBlank()) {
+			logger.infof("formatted mobileNumber: %s", formattedNumber);
+			mobileNumber = formattedNumber;
+		} else if (forceRetryOnBadFormat) {
+			logger.errorf("Failed phone number formatting checks for: %s", mobileNumber);
+			String formatError = context.getAuthenticationSession().getAuthNote("formatError");
+			if (formatError != null && !formatError.isBlank()) {
+				handleInvalidNumber(context, formatError);
+				return;
 			}
+		}
+
+		if (phoneAlreadyInUse(context, mobileNumber)) {
+			handleInvalidNumber(context, "Esse telefone já está sendo utilizado");
+			return;
 		}
 
 		authSession.setAuthNote("mobile_number", mobileNumber);
